@@ -3,10 +3,25 @@ SELECT *
 FROM PortfolioProject..CovidDeaths
 ORDER BY 3,4
 
+
 -- SELECT INFORMATION TO BE USED IN THE PROJECT
 SELECT [location], [date], population, total_cases, total_deaths
 FROM PortfolioProject..CovidDeaths
 ORDER BY 1,2
+
+
+-- CHECK DISTINCT VARIABLES IN continent AND location
+SELECT DISTINCT continent, [location]
+FROM PortfolioProject..CovidDeaths
+ORDER BY 1,2
+-- Note: continent = NULL indicates data at continent level.
+
+
+
+-- VIEW TOTAL DEATHCOUNT WORLDWIDE
+SELECT SUM(new_cases) AS TotalCases, SUM(new_deaths) AS TotalDeaths, SUM(new_deaths)/SUM(new_cases)*100 AS TotalDeathPercentage 
+FROM PortfolioProject..CovidDeaths
+WHERE continent IS NOT NULL
 
 
 -- VIEW CONTRACT PERCENTAGE IN THE USA and LIKELIHOOD OF DYING IF CONTRACTED 
@@ -19,11 +34,12 @@ ORDER BY 1, 2
 
 
 -- VIEW CONTRIES WITH HIGHEST INFECTION RATE COMPARED TO POPULATION
-SELECT [location], population, MAX(total_cases) AS HighestInfectionCount,
-    MAX(total_cases/population*100) AS HighestInfectionRate
+SELECT [location], population, date, MAX(total_cases) AS HighestInfectionCount,
+    MAX(total_cases/population)*100 AS InfectionRate
 FROM PortfolioProject..CovidDeaths
-GROUP BY [location], population
-ORDER BY HighestInfectionRate DESC
+WHERE [location] LIKE '%states%'
+GROUP BY [location], population, [date]
+ORDER BY InfectionRate DESC
 
 -- VIEW COUNTRIES WITH HIGHEST DEATHCOUNT PER POPULATION
 SELECT [location], population, MAX(total_deaths) AS HighestDeathCount,
@@ -47,12 +63,11 @@ SELECT [location], population, MAX(total_deaths) AS HighestDeathCount,
     MAX(total_deaths/population*100) AS HighestDeathRate
 FROM PortfolioProject..CovidDeaths
 WHERE continent IS NULL
+        AND [location] NOT IN ('European Union', 'World', 'International') -- Omit non-continent data
 GROUP BY [location], population
 ORDER BY HighestDeathRate DESC
 
-
--- GLOBAL NUMBERS
-
+-- VIEW INFECTION AND DEATH RATE ON A GLOBAL LEVEL
 SELECT date, SUM(new_cases) AS TotalNewCases, SUM(new_deaths) AS TotalNewDeaths,
 CASE
     WHEN SUM(new_cases) = 0 THEN NULL
